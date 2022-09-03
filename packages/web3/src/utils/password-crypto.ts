@@ -17,7 +17,16 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { Buffer } from 'buffer/'
-import { randomBytes, createCipheriv, createDecipheriv, pbkdf2Sync, CipherKey, BinaryLike } from 'crypto'
+import {
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  pbkdf2Sync,
+  CipherKey,
+  BinaryLike,
+  DecipherGCM,
+  CipherGCM
+} from 'crypto'
 
 const saltByteLength = 64
 const ivByteLength = 64
@@ -64,11 +73,11 @@ export const decrypt = (password: string, payloadRaw: string): string => {
   return decrypted.toString('utf8')
 }
 
-const createCipher = (key: CipherKey, iv: BinaryLike | null) => {
+const createCipher = (key: CipherKey, iv: BinaryLike): CipherGCM => {
   return createCipheriv('aes-256-gcm', key, iv)
 }
 
-const createDecipher = (key: CipherKey, iv: BinaryLike | null) => {
+const createDecipher = (key: CipherKey, iv: BinaryLike): DecipherGCM => {
   return createDecipheriv('aes-256-gcm', key, iv)
 }
 

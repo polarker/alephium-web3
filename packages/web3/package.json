@@ -38,8 +38,8 @@
     "update-schema:explorer": "npx swagger-typescript-api -t ./configs -o ./src/api -n api-explorer.ts -p https://raw.githubusercontent.com/alephium/explorer-backend/v${npm_package_config_explorer_backend_version}/app/src/main/resources/explorer-backend-openapi.json",
     "check-versions": "node scripts/check-versions.js ${npm_package_config_alephium_version} ${npm_package_config_explorer_backend_version}",
     "dev": "tsnd --respawn lib/index.ts",
-    "lint": "eslint . --ext ts",
-    "lint:fix": "eslint . --fix --ext ts",
+    "lint": "npx eslint . --ext ts",
+    "lint:fix": "npx eslint . --fix --ext ts",
     "test": "jest -i --config ./configs/jest.config.ts",
     "test:client": "jest -i --config ./configs/jest-client.config.ts",
     "test:unit": "jest -i --config ./configs/jest-unit.config.ts",
@@ -81,7 +81,7 @@
     "@types/rewire": "^2.5.28",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
-    "babel-eslint": "^10.1.0",
+    "@babel/eslint-parser": "^7.18.9",
     "clean-webpack-plugin": "4.0.0",
     "crypto-browserify": "^3.12.0",
     "eslint": "^7.32.0",
@@ -110,7 +110,7 @@
     "webpack-cli": "^4.9.2"
   },
   "engines": {
-    "node": ">=14.0.0",
+    "node": ">=16.0.0",
     "npm": ">=7.0.0"
   },
   "prettier": {
