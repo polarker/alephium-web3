@@ -16,13 +16,13 @@ You should have received a copy of the GNU Lesser General Public License
 along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { subscribeToEvents } from '../src/contract/events'
-import { Project } from '../src/contract'
-import { NodeWallet, SignExecuteScriptTxParams } from '../src/signer'
-import { ContractEvent } from '../src/api/api-alephium'
-import { testNodeWallet } from '../src/test'
-import { SubscribeOptions, timeout } from '../src/utils'
-import { setCurrentNodeProvider } from '../src'
+import { subscribeToEvents } from '@alephium/web3'
+import { Project } from '@alephium/web3'
+import { SignExecuteScriptTxParams } from '@alephium/web3'
+import { node } from '@alephium/web3'
+import { NodeWallet, testNodeWallet } from '@alephium/web3-wallet'
+import { SubscribeOptions, timeout } from '@alephium/web3'
+import { setCurrentNodeProvider } from '@alephium/web3'
 
 describe('events', function () {
   async function deployContract(signer: NodeWallet): Promise<[string, string]> {
@@ -61,10 +61,10 @@ describe('events', function () {
     const signer = await testNodeWallet()
 
     const [contractAddress, contractId] = await deployContract(signer)
-    const events: Array<ContractEvent> = []
-    const subscriptOptions: SubscribeOptions<ContractEvent> = {
+    const events: Array<node.ContractEvent> = []
+    const subscriptOptions: SubscribeOptions<node.ContractEvent> = {
       pollingInterval: 500,
-      messageCallback: (event: ContractEvent): Promise<void> => {
+      messageCallback: (event: node.ContractEvent): Promise<void> => {
         events.push(event)
         return Promise.resolve()
       },
@@ -101,10 +101,10 @@ describe('events', function () {
     const signer = await testNodeWallet()
 
     const [contractAddress, contractId] = await deployContract(signer)
-    const events: Array<ContractEvent> = []
+    const events: Array<node.ContractEvent> = []
     const subscriptOptions = {
       pollingInterval: 500,
-      messageCallback: (event: ContractEvent): Promise<void> => {
+      messageCallback: (event: node.ContractEvent): Promise<void> => {
         events.push(event)
         return Promise.resolve()
       },

@@ -24,3 +24,5 @@ export * from './transaction'
 
 export * from './constants'
 export * from './global'
+
+export * as utils from './utils'

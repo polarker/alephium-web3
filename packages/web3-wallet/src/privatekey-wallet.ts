@@ -17,8 +17,7 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { ec as EC } from 'elliptic'
-import { Account, SignerWithNodeProvider } from '../signer'
-import * as utils from '../utils'
+import { Account, SignerWithNodeProvider, utils } from '@alephium/web3'
 
 const ec = new EC('secp256k1')
 

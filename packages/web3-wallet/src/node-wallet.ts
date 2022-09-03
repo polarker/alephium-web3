@@ -16,7 +16,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { Account, SignerWithNodeProvider } from '../signer'
+import { Account, SignerWithNodeProvider } from '@alephium/web3'
 
 export class NodeWallet extends SignerWithNodeProvider {
   public walletName: string
