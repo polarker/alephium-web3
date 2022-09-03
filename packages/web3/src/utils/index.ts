@@ -19,6 +19,5 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 export * from './address'
 export * from './bs58'
 export * from './djb2'
-export * from './password-crypto'
 export * from './utils'
 export * from './subscription'

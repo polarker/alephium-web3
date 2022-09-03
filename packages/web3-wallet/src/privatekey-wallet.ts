@@ -17,7 +17,8 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { ec as EC } from 'elliptic'
-import { Account, SignerWithNodeProvider, utils } from '@alephium/web3'
+import { Account, SignerWithNodeProvider, utils, bs58 } from '@alephium/web3'
+import { deriveHDWalletPrivateKey } from './hd-wallet'
 
 const ec = new EC('secp256k1')
 
@@ -38,6 +39,11 @@ export class PrivateKeyWallet extends SignerWithNodeProvider {
   static Random(alwaysSubmitTx = true): PrivateKeyWallet {
     const keyPair = ec.genKeyPair()
     return new PrivateKeyWallet(keyPair.getPrivate().toString('hex'), alwaysSubmitTx)
+  }
+
+  static FromMnemonic(mnemonic: string, addressIndex?: number, passphrase?: string, alwaysSubmitTx = true): PrivateKeyWallet {
+    const privateKey = deriveHDWalletPrivateKey(mnemonic, addressIndex === undefined ? 0 : addressIndex, passphrase)
+    return new PrivateKeyWallet(privateKey, alwaysSubmitTx)
   }
 
   async getAccounts(): Promise<Account[]> {

@@ -29,5 +29,7 @@ export async function testNodeWallet(): Promise<NodeWallet> {
   return wallet
 }
 
+export * from './hd-wallet'
 export * from './node-wallet'
 export * from './privatekey-wallet'
+export * from './password-crypto'

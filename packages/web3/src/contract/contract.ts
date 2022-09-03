@@ -17,8 +17,7 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { Buffer } from 'buffer/'
-import * as cryptojs from 'crypto-js'
-import * as crypto from 'crypto'
+import { webcrypto as crypto } from 'crypto'
 import fs from 'fs'
 import { promises as fsPromises } from 'fs'
 import { node, NodeProvider } from '../api'
@@ -77,7 +76,7 @@ class SourceFile {
   constructor(type: SourceType, sourceCode: string, contractPath: string) {
     this.type = type
     this.sourceCode = sourceCode
-    this.sourceCodeHash = cryptojs.SHA256(sourceCode).toString()
+    this.sourceCodeHash = crypto.subtle.digest('SHA-256', Buffer.from(sourceCode)).toString()
     this.contractPath = contractPath
   }
 }
@@ -499,8 +498,10 @@ export class Contract extends Artifact {
     }
   }
 
+  // no need to be cryptographically strong random
   static randomAddress(): string {
-    const bytes = crypto.randomBytes(33)
+    const bytes = new Uint8Array(33)
+    crypto.getRandomValues(bytes)
     bytes[0] = 3
     return bs58.encode(bytes)
   }
