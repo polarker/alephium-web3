@@ -5,5 +5,5 @@ web/
 .vscode
 .DS_Store
 coverage/
-/dev/
-!dev/user.conf
+/dev/*
+!/dev/user.conf
