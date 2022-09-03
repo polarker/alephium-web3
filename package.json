@@ -1,6 +1,7 @@
 {
   "name": "@alephium/web3-root",
   "private": true,
+  "license": "GPL",
   "workspaces": [
     "packages/*"
   ],
@@ -17,7 +18,7 @@
     "lint:fix": "lerna run lint:fix",
     "audit": "lerna exec -- npm audit --production",
     "update-schemas": "lerna run update-schemas",
-    "publish": "lerna publish",
+    "publish": "lerna publish from-package",
     "start-devnet": "lerna run start-devnet",
     "stop-devnet": "lerna run stop-devnet",
     "restart-devnet": "lerna run restart-devnet"
