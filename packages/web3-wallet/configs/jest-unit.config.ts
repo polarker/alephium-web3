@@ -16,23 +16,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import path from 'path'
 import type { Config } from '@jest/types'
+
+import jestBaseConfigFactory from './jest.config'
 
 // Or async function
 export default async (): Promise<Config.InitialOptions> => {
-  const jestConfig: Config.InitialOptions = {
-    transform: {
-      '^.+\\.(t|j)sx?$': 'ts-jest'
-    },
-    rootDir: path.normalize(__dirname + '/..'),
-    testMatch: ['<rootDir>/**/*.test.ts'],
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    collectCoverage: true,
-    coverageDirectory: '<rootDir>/coverage/',
-    collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
-    testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.*#.*']
+  const jestBaseConfig = await jestBaseConfigFactory()
+  return {
+    ...jestBaseConfig,
+    testMatch: ['<rootDir>/src/**/*.test.ts']
   }
-
-  return jestConfig
 }

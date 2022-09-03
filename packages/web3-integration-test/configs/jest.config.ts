@@ -16,19 +16,23 @@ You should have received a copy of the GNU Lesser General Public License
 along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { NodeWallet } from './node-wallet'
+import path from 'path'
+import type { Config } from '@jest/types'
 
-export const testWalletName = 'alephium-web3-test-only-wallet'
-export const testAddress = '1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH'
-export const testPassword = 'alph'
+// Or async function
+export default async (): Promise<Config.InitialOptions> => {
+  const jestConfig: Config.InitialOptions = {
+    transform: {
+      '^.+\\.(t|j)sx?$': 'ts-jest'
+    },
+    rootDir: path.normalize(__dirname + '/..'),
+    testMatch: ['<rootDir>/**/*.test.ts'],
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+    collectCoverage: true,
+    coverageDirectory: '<rootDir>/../../coverage/',
+    collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
+    testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.*#.*']
+  }
 
-export async function testNodeWallet(): Promise<NodeWallet> {
-  const wallet = new NodeWallet(testWalletName)
-  await wallet.unlock(testPassword)
-  return wallet
+  return jestConfig
 }
-
-export * from './hd-wallet'
-export * from './node-wallet'
-export * from './privatekey-wallet'
-export * from './password-crypto'

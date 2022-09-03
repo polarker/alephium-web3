@@ -27,7 +27,10 @@
     "explorer_backend_version": "1.7.1"
   },
   "scripts": {
-    "build": "rm -rf dist/* && npx tsc --build ."
+    "build": "rm -rf dist/* && npx tsc --build .",
+    "lint": "npx eslint . --ext ts",
+    "lint:fix": "npx eslint . --fix --ext ts",
+    "test": "jest -i --config ./configs/jest.config.ts"
   },
   "type": "commonjs",
   "dependencies": {

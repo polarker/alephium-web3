@@ -15,20 +15,3 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
-
-import { NodeWallet } from './node-wallet'
-
-export const testWalletName = 'alephium-web3-test-only-wallet'
-export const testAddress = '1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH'
-export const testPassword = 'alph'
-
-export async function testNodeWallet(): Promise<NodeWallet> {
-  const wallet = new NodeWallet(testWalletName)
-  await wallet.unlock(testPassword)
-  return wallet
-}
-
-export * from './hd-wallet'
-export * from './node-wallet'
-export * from './privatekey-wallet'
-export * from './password-crypto'

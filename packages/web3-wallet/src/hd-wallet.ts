@@ -19,7 +19,7 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 import * as bip32 from 'bip32'
 import * as bip39 from 'bip39'
 
-export function deriveHDWalletPrivateKey(mnemonic: string, addressIndex: number, passphrase?: string) {
+export function deriveHDWalletPrivateKey(mnemonic: string, addressIndex: number, passphrase?: string): string {
   const seed = bip39.mnemonicToSeedSync(mnemonic, passphrase)
   const masterKey = bip32.fromSeed(seed)
   const keyPair = masterKey.derivePath(getHDWalletPath(addressIndex))
@@ -29,8 +29,8 @@ export function deriveHDWalletPrivateKey(mnemonic: string, addressIndex: number,
   return keyPair.privateKey.toString('hex')
 }
 
-export function getHDWalletPath(addressIndex: number) {
-  if ((addressIndex < 0 || !Number.isInteger(addressIndex) || addressIndex.toString().includes('e'))) {
+export function getHDWalletPath(addressIndex: number): string {
+  if (addressIndex < 0 || !Number.isInteger(addressIndex) || addressIndex.toString().includes('e')) {
     throw new Error('Invalid address index path level')
   }
   // Being explicit: we always use coinType 1234 no matter the network.

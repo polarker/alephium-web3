@@ -1,5 +1,6 @@
 {
-  "name": "root",
+  "name": "@alephium/web3-root",
+  "private": true,
   "workspaces": [
     "packages/*"
   ],
@@ -11,6 +12,14 @@
     "clean": "lerna clean",
     "build": "lerna run build",
     "bootstrap": "lerna bootstrap --hoist",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "lint:fix": "lerna run lint:fix",
+    "audit": "lerna exec -- npm audit --production",
+    "update-schemas": "lerna run update-schemas",
+    "publish": "lerna publish",
+    "start-devnet": "lerna run start-devnet",
+    "stop-devnet": "lerna run stop-devnet",
+    "restart-devnet": "lerna run restart-devnet"
   }
 }

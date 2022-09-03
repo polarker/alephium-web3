@@ -15,4 +15,4 @@ jobs:
     steps:
     - name: Checkout the code
       uses: actions/checkout@v2
-    - run: lerna exec -- npm audit --production
+    - run: npm run audit

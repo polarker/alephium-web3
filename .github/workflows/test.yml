@@ -19,10 +19,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: lerna bootstrap --hoist
+      - run: npm run bootstrap && npm run build
       # - run: npm install @jest/types --save-dev
       # - run: npm run check-versions
-      - run: lerna run lint
-      - run: lerna exec -- npm audit --production
-      - run: lerna run start-devnet
-      - run: lerna run test
+      - run: npm run lint
+      - run: npm run audit
+      - run: npm run start-devnet
+      - run: npm run test
