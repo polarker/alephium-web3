@@ -30,7 +30,7 @@ jobs:
           languages: javascript
 
       - run: |
-          npm run bootstrap
+          npm ci
           npm run build
 
       - name: Perform CodeQL Analysis
