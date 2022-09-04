@@ -1,6 +1,6 @@
 {
   "name": "@alephium/web3-wallet",
-  "version": "0.2.0-rc.7",
+  "version": "0.2.0-rc.8",
   "description": "Simple wallets for Alephium",
   "keywords": [
     "alephium",
@@ -27,12 +27,12 @@
   },
   "type": "commonjs",
   "dependencies": {
-    "@alephium/web3": "0.2.0-rc.7",
+    "@alephium/web3": "^0.2.0-rc.8",
+    "@types/node": "^16.7.8",
     "bip32": "2.0.6",
     "bip39": "3.0.4",
     "buffer": "^6.0.3",
-    "fs-extra": "10.0.1",
-    "@types/node": "^16.7.8"
+    "fs-extra": "10.0.1"
   },
   "devDependencies": {
     "@types/elliptic": "^6.4.13",
