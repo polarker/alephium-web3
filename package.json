@@ -7,20 +7,36 @@
   ],
   "type": "commonjs",
   "devDependencies": {
+    "eslint": "^7.32.0",
+    "jest": "^28.1.0",
     "lerna": "^5.5.0"
   },
   "scripts": {
     "clean": "lerna clean",
     "build": "lerna run build",
     "bootstrap": "lerna bootstrap --hoist",
-    "test": "lerna run test",
-    "lint": "lerna run lint",
-    "lint:fix": "lerna run lint:fix",
+    "test": "jest -i --config ./jest-config.json",
+    "lint": "eslint . --ext ts",
+    "lint:fix": "eslint . --fix --ext ts",
     "audit": "lerna exec -- npm audit --production",
     "update-schemas": "lerna run update-schemas",
-    "publish": "lerna publish from-package",
+    "version": "lerna version --no-push --no-private",
+    "publish": "npm run build && lerna exec -- npm publish",
     "start-devnet": "lerna run start-devnet",
     "stop-devnet": "lerna run stop-devnet",
     "restart-devnet": "lerna run restart-devnet"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "bracketSameLine": false,
+    "trailingComma": "none"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
   }
 }

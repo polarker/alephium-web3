@@ -21,6 +21,3 @@ coverage/
 
 # GitHub Actions
 .github/
-
-src/**/*.test.ts
-**/fixtures/
