@@ -73,11 +73,16 @@ class SourceFile {
     return artifactsRootPath + this.contractPath.slice(this.contractPath.indexOf('/')) + '.json'
   }
 
-  constructor(type: SourceType, sourceCode: string, contractPath: string) {
+  constructor(type: SourceType, sourceCode: string, sourceCodeHash: string, contractPath: string) {
     this.type = type
     this.sourceCode = sourceCode
-    this.sourceCodeHash = crypto.subtle.digest('SHA-256', Buffer.from(sourceCode)).toString()
+    this.sourceCodeHash = sourceCodeHash
     this.contractPath = contractPath
+  }
+
+  static async from(type: SourceType, sourceCode: string, contractPath: string): Promise<SourceFile> {
+    const sourceCodeHash = await crypto.subtle.digest('SHA-256', Buffer.from(sourceCode))
+    return new SourceFile(type, sourceCode, Buffer.from(sourceCodeHash).toString('hex'), contractPath)
   }
 }
 
@@ -348,7 +353,7 @@ export class Project {
     }
     const matcherIndex = results.indexOf(1)
     const type = this.matchers[`${matcherIndex}`].type
-    return new SourceFile(type, sourceStr, contractPath)
+    return SourceFile.from(type, sourceStr, contractPath)
   }
 
   private static async loadSourceFiles(contractsRootPath: string): Promise<SourceFile[]> {
