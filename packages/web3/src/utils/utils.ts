@@ -51,7 +51,7 @@ export function signatureEncode(signature: EC.Signature): string {
 }
 
 // the signature should be in hex string format for 64 bytes
-export const signatureDecode = (ec: EC, signature: string): SignatureInput => {
+export function signatureDecode(ec: EC, signature: string): SignatureInput {
   if (signature.length !== 128) {
     throw new Error('Invalid signature length')
   }
@@ -66,7 +66,7 @@ export const signatureDecode = (ec: EC, signature: string): SignatureInput => {
   }
 }
 
-const xorByte = (intValue: number) => {
+export function xorByte(intValue: number): number {
   const byte0 = (intValue >> 24) & 0xff
   const byte1 = (intValue >> 16) & 0xff
   const byte2 = (intValue >> 8) & 0xff
@@ -85,7 +85,7 @@ enum AddressType {
   P2C = 0x03
 }
 
-export const groupOfAddress = (address: string): number => {
+export function groupOfAddress(address: string): number {
   const decoded = bs58.decode(address)
 
   if (decoded.length == 0) throw new Error('Address string is empty')
@@ -103,7 +103,7 @@ export const groupOfAddress = (address: string): number => {
   }
 }
 
-const groupOfAddressBytes = (bytes: Uint8Array): number => {
+function groupOfAddressBytes(bytes: Uint8Array): number {
   const hint = djb2(bytes) | 1
   const hash = xorByte(hint)
   const group = hash % TOTAL_NUMBER_OF_GROUPS
@@ -111,7 +111,7 @@ const groupOfAddressBytes = (bytes: Uint8Array): number => {
 }
 
 // Pay to public key hash address
-const groupOfP2pkhAddress = (address: Uint8Array): number => {
+function groupOfP2pkhAddress(address: Uint8Array): number {
   if (address.length != 32) {
     throw new Error(`Invalid p2pkh address length: ${address.length}`)
   }
@@ -120,7 +120,7 @@ const groupOfP2pkhAddress = (address: Uint8Array): number => {
 }
 
 // Pay to multiple public key hash address
-const groupOfP2mpkhAddress = (address: Uint8Array): number => {
+function groupOfP2mpkhAddress(address: Uint8Array): number {
   if ((address.length - 2) % 32 != 0) {
     throw new Error(`Invalid p2mpkh address length: ${address.length}`)
   }
@@ -129,7 +129,7 @@ const groupOfP2mpkhAddress = (address: Uint8Array): number => {
 }
 
 // Pay to script hash address
-const groupOfP2shAddress = (address: Uint8Array): number => {
+function groupOfP2shAddress(address: Uint8Array): number {
   return groupOfAddressBytes(address)
 }
 
