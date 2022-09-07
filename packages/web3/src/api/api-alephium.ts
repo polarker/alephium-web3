@@ -422,6 +422,7 @@ export interface ChangeActiveAddress {
 }
 
 export interface CompileContractResult {
+  name: string
   bytecode: string
 
   /** @format 32-byte-hash */
@@ -438,10 +439,20 @@ export interface CompileProjectResult {
 }
 
 export interface CompileScriptResult {
+  name: string
   bytecodeTemplate: string
   fields: FieldsSig
   functions: FunctionSig[]
   warnings: string[]
+}
+
+export interface CompilerOptions {
+  ignoreUnusedConstantsWarnings?: boolean
+  ignoreUnusedVariablesWarnings?: boolean
+  ignoreUnusedFieldsWarnings?: boolean
+  ignoreUnusedPrivateFunctionsWarnings?: boolean
+  ignoreReadonlyCheckWarnings?: boolean
+  ignoreExternalCallCheckWarnings?: boolean
 }
 
 export interface Confirmed {
@@ -464,6 +475,7 @@ export interface Confirmed {
 
 export interface Contract {
   code: string
+  compilerOptions?: CompilerOptions
 }
 
 export interface ContractEvent {
@@ -714,6 +726,7 @@ export interface Penalty {
 
 export interface Project {
   code: string
+  compilerOptions?: CompilerOptions
 }
 
 export interface Reachable {
@@ -742,6 +755,7 @@ export interface RevealMnemonicResult {
 
 export interface Script {
   code: string
+  compilerOptions?: CompilerOptions
 }
 
 export interface SelfClique {
