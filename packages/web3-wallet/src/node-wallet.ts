@@ -18,8 +18,6 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 
 import { Account, SignerWithNodeProvider } from '@alephium/web3'
 
-console.log(`============= ${Account}`)
-
 export class NodeWallet extends SignerWithNodeProvider {
   public walletName: string
   public accounts: Account[] | undefined

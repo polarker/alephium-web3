@@ -13,9 +13,10 @@
   },
   "scripts": {
     "clean": "lerna clean",
+    "postinstall": "npm run bootstrap",
     "build": "lerna run build",
     "bootstrap": "lerna bootstrap --hoist",
-    "test": "jest -i --config ./jest-config.json",
+    "test": "lerna run test",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
     "audit": "lerna exec -- npm audit --production",
