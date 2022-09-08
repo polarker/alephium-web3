@@ -20,6 +20,8 @@ import { ec as EC } from 'elliptic'
 
 import utils from '@alephium/web3'
 
+console.log(`=========== ${utils}`)
+
 const ec = new EC('secp256k1')
 
 export function transactionSign(txHash: string, privateKey: string): string {

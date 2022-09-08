@@ -17,7 +17,6 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import EC from 'elliptic'
-import assert from 'assert'
 
 import { transactionSign, transactionVerifySignature } from './sign-verify'
 
@@ -32,9 +31,9 @@ describe('transaction', function () {
     const wrongSig =
       '88471e7c97e558c98ac307ef699ed535ece319102fc69ea416dbb44fbb3cbf9c42dbfbf4ce73eb68c5e0d66122eb25d2ebe1cf9e37ef4c4f4e7a2ed35de141bc'
 
-    assert.strictEqual(transactionVerifySignature(txHash, pubKey, txSig), true)
-    assert.strictEqual(transactionVerifySignature(txHash, pubKey, unnormalizedSig), false)
-    assert.strictEqual(transactionVerifySignature(txHash, pubKey, wrongSig), false)
+    expect(transactionVerifySignature(txHash, pubKey, txSig)).toEqual(true)
+    expect(transactionVerifySignature(txHash, pubKey, unnormalizedSig)).toEqual(true)
+    expect(transactionVerifySignature(txHash, pubKey, wrongSig)).toEqual(false)
   })
 
   it('should sign and verify signature', () => {
@@ -45,6 +44,6 @@ describe('transaction', function () {
 
     const txHash = '8fc5f0d120b730f97f6cea5f02ae4a6ee7bf451d9261c623ea69d85e870201d2'
     const signature = transactionSign(txHash, privateKey)
-    assert.strictEqual(transactionVerifySignature(txHash, publicKey, signature), true)
+    expect(transactionVerifySignature(txHash, publicKey, signature)).toEqual(true)
   })
 })
