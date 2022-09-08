@@ -26,7 +26,7 @@ import { setCurrentNodeProvider } from '@alephium/web3'
 describe('transactions', function () {
   it('should subscribe transaction status', async () => {
     setCurrentNodeProvider('http://127.0.0.1:22973')
-    await Project.build()
+    await Project.build({ errorOnWarnings: false })
     const sub = Project.contract('sub/sub.ral')
     const signer = await testNodeWallet()
     const subDeployTx = await sub.transactionForDeployment(signer, {

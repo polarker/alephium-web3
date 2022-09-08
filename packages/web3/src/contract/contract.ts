@@ -38,15 +38,20 @@ enum SourceType {
   Interface = 3
 }
 
-export type CompilerOptions = {
+export type CompilerOptions = node.CompilerOptions & {
   errorOnWarnings: boolean
-  ignoreUnusedConstantsWarnings: boolean
 }
 
-export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
-  errorOnWarnings: true,
-  ignoreUnusedConstantsWarnings: true
+export const DEFAULT_NODE_COMPILER_OPTIONS: node.CompilerOptions = {
+  ignoreUnusedConstantsWarnings: false,
+  ignoreUnusedVariablesWarnings: false,
+  ignoreUnusedFieldsWarnings: false,
+  ignoreUnusedPrivateFunctionsWarnings: false,
+  ignoreReadonlyCheckWarnings: false,
+  ignoreExternalCallCheckWarnings: false
 }
+
+export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = { errorOnWarnings: true, ...DEFAULT_NODE_COMPILER_OPTIONS }
 
 class TypedMatcher<T extends SourceType> {
   matcher: RegExp
@@ -73,11 +78,16 @@ class SourceFile {
     return artifactsRootPath + this.contractPath.slice(this.contractPath.indexOf('/')) + '.json'
   }
 
-  constructor(type: SourceType, sourceCode: string, contractPath: string) {
+  constructor(type: SourceType, sourceCode: string, sourceCodeHash: string, contractPath: string) {
     this.type = type
     this.sourceCode = sourceCode
-    this.sourceCodeHash = crypto.subtle.digest('SHA-256', Buffer.from(sourceCode)).toString()
+    this.sourceCodeHash = sourceCodeHash
     this.contractPath = contractPath
+  }
+
+  static async from(type: SourceType, sourceCode: string, contractPath: string): Promise<SourceFile> {
+    const sourceCodeHash = await crypto.subtle.digest('SHA-256', Buffer.from(sourceCode))
+    return new SourceFile(type, sourceCode, Buffer.from(sourceCodeHash).toString('hex'), contractPath)
   }
 }
 
@@ -96,19 +106,47 @@ class Compiled<T extends Artifact> {
 class ProjectArtifact {
   static readonly artifactFileName = '.project.json'
 
+  compilerOptionsUsed: node.CompilerOptions
   infos: Map<string, { sourceCodeHash: string; warnings: string[] }>
 
-  constructor(infos: Map<string, { sourceCodeHash: string; warnings: string[] }>) {
+  static checkCompilerOptionsParameter(compilerOptions: node.CompilerOptions): void {
+    if (Object.keys(compilerOptions).length != Object.keys(DEFAULT_NODE_COMPILER_OPTIONS).length) {
+      throw Error(`Not all compiler options are set: ${compilerOptions}`)
+    }
+
+    const combined = { ...compilerOptions, ...DEFAULT_NODE_COMPILER_OPTIONS }
+    if (Object.keys(combined).length !== Object.keys(DEFAULT_NODE_COMPILER_OPTIONS).length) {
+      throw Error(`There are unknown compiler options: ${compilerOptions}`)
+    }
+  }
+
+  constructor(
+    compilerOptionsUsed: node.CompilerOptions,
+    infos: Map<string, { sourceCodeHash: string; warnings: string[] }>
+  ) {
+    ProjectArtifact.checkCompilerOptionsParameter(compilerOptionsUsed)
+    this.compilerOptionsUsed = compilerOptionsUsed
     this.infos = infos
   }
 
   async saveToFile(rootPath: string): Promise<void> {
     const filepath = rootPath + '/' + ProjectArtifact.artifactFileName
-    const content = JSON.stringify(Object.fromEntries(this.infos), null, 2)
+    const artifact = { compilerOptionsUsed: this.compilerOptionsUsed, infos: Object.fromEntries(this.infos) }
+    const content = JSON.stringify(artifact, null, 2)
     return fsPromises.writeFile(filepath, content)
   }
 
-  sourceHasChanged(files: SourceFile[]): boolean {
+  needToReCompile(compilerOptions: node.CompilerOptions, files: SourceFile[]): boolean {
+    ProjectArtifact.checkCompilerOptionsParameter(compilerOptions)
+
+    const optionsMatched = Object.entries(compilerOptions).every(([key, inputOption]) => {
+      const usedOption = this.compilerOptionsUsed[`${key}`]
+      return usedOption === inputOption
+    })
+    if (!optionsMatched) {
+      return true
+    }
+
     if (files.length !== this.infos.size) {
       return true
     }
@@ -118,6 +156,7 @@ class ProjectArtifact {
         return true
       }
     }
+
     return false
   }
 
@@ -127,10 +166,11 @@ class ProjectArtifact {
       return undefined
     }
     const content = await fsPromises.readFile(filepath)
-    const files = new Map(
-      Object.entries<{ sourceCodeHash: string; warnings: string[] }>(JSON.parse(content.toString()))
-    )
-    return new ProjectArtifact(files)
+    const json = JSON.parse(content.toString())
+    const compilerOptionsUsed = json.compilerOptionsUsed as node.CompilerOptions
+    const files = new Map(Object.entries<{ sourceCodeHash: string; warnings: string[] }>(json.infos))
+    const x = Object.entries<{ sourceCodeHash: string; warnings: string[] }>(json.infos)
+    return new ProjectArtifact(compilerOptionsUsed, files)
   }
 }
 
@@ -138,6 +178,7 @@ export class Project {
   sourceFiles: SourceFile[]
   contracts: Compiled<Contract>[]
   scripts: Compiled<Script>[]
+  projectArtifact: ProjectArtifact
 
   readonly contractsRootPath: string
   readonly artifactsRootPath: string
@@ -159,13 +200,44 @@ export class Project {
     Project.scriptMatcher
   ]
 
+  static buildProjectArtifact(
+    sourceFiles: SourceFile[],
+    contracts: Compiled<Contract>[],
+    scripts: Compiled<Script>[],
+    compilerOptions: node.CompilerOptions
+  ): ProjectArtifact {
+    const files: Map<string, { sourceCodeHash: string; warnings: string[] }> = new Map()
+    contracts.forEach((c) => {
+      files.set(c.sourceFile.contractPath, {
+        sourceCodeHash: c.sourceFile.sourceCodeHash,
+        warnings: c.warnings
+      })
+    })
+    scripts.forEach((s) => {
+      files.set(s.sourceFile.contractPath, {
+        sourceCodeHash: s.sourceFile.sourceCodeHash,
+        warnings: s.warnings
+      })
+    })
+    const compiledSize = contracts.length + scripts.length
+    sourceFiles.slice(compiledSize).forEach((c) => {
+      files.set(c.contractPath, {
+        sourceCodeHash: c.sourceCodeHash,
+        warnings: []
+      })
+    })
+    return new ProjectArtifact(compilerOptions, files)
+  }
+
   private constructor(
     provider: NodeProvider,
     contractsRootPath: string,
     artifactsRootPath: string,
     sourceFiles: SourceFile[],
     contracts: Compiled<Contract>[],
-    scripts: Compiled<Script>[]
+    scripts: Compiled<Script>[],
+    errorOnWarnings: boolean,
+    projectArtifact: ProjectArtifact
   ) {
     this.nodeProvider = provider
     this.contractsRootPath = contractsRootPath
@@ -173,6 +245,14 @@ export class Project {
     this.sourceFiles = sourceFiles
     this.contracts = contracts
     this.scripts = scripts
+    this.projectArtifact = projectArtifact
+
+    if (errorOnWarnings) {
+      Project.checkCompilerWarnings(
+        [...contracts.map((c) => c.warnings).flat(), ...scripts.map((s) => s.warnings).flat()],
+        errorOnWarnings
+      )
+    }
   }
 
   private getContractPath(path: string): string {
@@ -183,15 +263,12 @@ export class Project {
       : this.contractsRootPath + '/' + path
   }
 
-  private static checkCompilerWarnings(warnings: string[], compilerOptions: CompilerOptions): void {
-    const remains = compilerOptions.ignoreUnusedConstantsWarnings
-      ? warnings.filter((s) => !s.includes('unused constants'))
-      : warnings
-    if (remains.length !== 0) {
+  static checkCompilerWarnings(warnings: string[], errorOnWarnings: boolean): void {
+    if (warnings.length !== 0) {
       const prefixPerWarning = '  - '
-      const warningString = prefixPerWarning + remains.join('\n' + prefixPerWarning)
-      const output = 'Compilation warnings:\n' + warningString + '\n'
-      if (compilerOptions.errorOnWarnings) {
+      const warningString = prefixPerWarning + warnings.join('\n' + prefixPerWarning)
+      const output = `Compilation warnings:\n` + warningString + '\n'
+      if (errorOnWarnings) {
         throw new Error(output)
       } else {
         console.log(output)
@@ -199,23 +276,21 @@ export class Project {
     }
   }
 
-  static contract(path: string, compilerOptions?: Partial<CompilerOptions>): Contract {
+  static contract(path: string): Contract {
     const contractPath = Project.currentProject.getContractPath(path)
     const contract = Project.currentProject.contracts.find((c) => c.sourceFile.contractPath === contractPath)
     if (typeof contract === 'undefined') {
       throw new Error(`Contract ${contractPath} does not exist`)
     }
-    Project.checkCompilerWarnings(contract.warnings, { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions })
     return contract.artifact
   }
 
-  static script(path: string, compilerOptions?: Partial<CompilerOptions>): Script {
+  static script(path: string): Script {
     const contractPath = Project.currentProject.getContractPath(path)
     const script = Project.currentProject.scripts.find((c) => c.sourceFile.contractPath === contractPath)
     if (typeof script === 'undefined') {
       throw new Error(`Script ${contractPath} does not exist`)
     }
-    Project.checkCompilerWarnings(script.warnings, { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions })
     return script.artifact
   }
 
@@ -235,6 +310,7 @@ export class Project {
     for (const script of this.scripts) {
       await saveToFile(script)
     }
+    await this.projectArtifact.saveToFile(this.artifactsRootPath)
   }
 
   contractByCodeHash(codeHash: string): Contract {
@@ -245,40 +321,18 @@ export class Project {
     return contract.artifact
   }
 
-  private async saveProjectArtifactToFile(): Promise<void> {
-    const files: Map<string, { sourceCodeHash: string; warnings: string[] }> = new Map()
-    this.contracts.forEach((c) => {
-      files.set(c.sourceFile.contractPath, {
-        sourceCodeHash: c.sourceFile.sourceCodeHash,
-        warnings: c.warnings
-      })
-    })
-    this.scripts.forEach((s) => {
-      files.set(s.sourceFile.contractPath, {
-        sourceCodeHash: s.sourceFile.sourceCodeHash,
-        warnings: s.warnings
-      })
-    })
-    const compiledSize = this.contracts.length + this.scripts.length
-    this.sourceFiles.slice(compiledSize).forEach((c) => {
-      files.set(c.contractPath, {
-        sourceCodeHash: c.sourceCodeHash,
-        warnings: []
-      })
-    })
-    const projectArtifact = new ProjectArtifact(files)
-    await projectArtifact.saveToFile(this.artifactsRootPath)
-  }
-
   private static async compile(
     provider: NodeProvider,
     files: SourceFile[],
     contractsRootPath: string,
-    artifactsRootPath: string
+    artifactsRootPath: string,
+    errorOnWarnings: boolean,
+    compilerOptions: node.CompilerOptions
   ): Promise<Project> {
     const sourceStr = files.map((f) => f.sourceCode).join('\n')
     const result = await provider.contracts.postContractsCompileProject({
-      code: sourceStr
+      code: sourceStr,
+      compilerOptions: compilerOptions
     })
     const contracts: Compiled<Contract>[] = []
     const scripts: Compiled<Script>[] = []
@@ -292,9 +346,18 @@ export class Project {
       const script = Script.fromCompileResult(scriptResult)
       scripts.push(new Compiled(sourceFile, script, scriptResult.warnings))
     })
-    const project = new Project(provider, contractsRootPath, artifactsRootPath, files, contracts, scripts)
+    const projectArtifact = Project.buildProjectArtifact(files, contracts, scripts, compilerOptions)
+    const project = new Project(
+      provider,
+      contractsRootPath,
+      artifactsRootPath,
+      files,
+      contracts,
+      scripts,
+      errorOnWarnings,
+      projectArtifact
+    )
     await project.saveArtifactsToFile()
-    await project.saveProjectArtifactToFile()
     return project
   }
 
@@ -303,7 +366,9 @@ export class Project {
     files: SourceFile[],
     projectArtifact: ProjectArtifact,
     contractsRootPath: string,
-    artifactsRootPath: string
+    artifactsRootPath: string,
+    errorOnWarnings: boolean,
+    compilerOptions: node.CompilerOptions
   ): Promise<Project> {
     try {
       const contracts: Compiled<Contract>[] = []
@@ -323,10 +388,20 @@ export class Project {
           scripts.push(new Compiled(file, artifact, warnings))
         }
       }
-      return new Project(provider, contractsRootPath, artifactsRootPath, files, contracts, scripts)
+
+      return new Project(
+        provider,
+        contractsRootPath,
+        artifactsRootPath,
+        files,
+        contracts,
+        scripts,
+        errorOnWarnings,
+        projectArtifact
+      )
     } catch (error) {
       console.log(`Failed to load artifacts, error: ${error}, try to re-compile contracts...`)
-      return Project.compile(provider, files, contractsRootPath, artifactsRootPath)
+      return Project.compile(provider, files, contractsRootPath, artifactsRootPath, errorOnWarnings, compilerOptions)
     }
   }
 
@@ -348,7 +423,7 @@ export class Project {
     }
     const matcherIndex = results.indexOf(1)
     const type = this.matchers[`${matcherIndex}`].type
-    return new SourceFile(type, sourceStr, contractPath)
+    return SourceFile.from(type, sourceStr, contractPath)
   }
 
   private static async loadSourceFiles(contractsRootPath: string): Promise<SourceFile[]> {
@@ -375,20 +450,38 @@ export class Project {
     return sourceFiles.sort((a, b) => a.type - b.type)
   }
 
-  static async build(contractsRootPath = 'contracts', artifactsRootPath = 'artifacts'): Promise<void> {
+  static async build(
+    compilerOptionsPartial: Partial<CompilerOptions> = {},
+    contractsRootPath = 'contracts',
+    artifactsRootPath = 'artifacts'
+  ): Promise<void> {
     const provider = getCurrentNodeProvider()
     const sourceFiles = await Project.loadSourceFiles(contractsRootPath)
+    const { errorOnWarnings, ...nodeCompilerOptions } = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptionsPartial }
     const projectArtifact = await ProjectArtifact.from(artifactsRootPath)
-    if (typeof projectArtifact === 'undefined' || projectArtifact.sourceHasChanged(sourceFiles)) {
-      Project.currentProject = await Project.compile(provider, sourceFiles, contractsRootPath, artifactsRootPath)
+    if (typeof projectArtifact === 'undefined' || projectArtifact.needToReCompile(nodeCompilerOptions, sourceFiles)) {
+      console.log(`Compile contracts in folder "${contractsRootPath}"`)
+      Project.currentProject = await Project.compile(
+        provider,
+        sourceFiles,
+        contractsRootPath,
+        artifactsRootPath,
+        errorOnWarnings,
+        nodeCompilerOptions
+      )
+      console.log(`===== A ${JSON.stringify(Project.currentProject.projectArtifact)}`)
     } else {
+      console.log(`Load compiled contracts from folder "${artifactsRootPath}"`)
       Project.currentProject = await Project.loadArtifacts(
         provider,
         sourceFiles,
         projectArtifact,
         contractsRootPath,
-        artifactsRootPath
+        artifactsRootPath,
+        errorOnWarnings,
+        nodeCompilerOptions
       )
+      console.log(`===== B ${JSON.stringify(Project.currentProject.projectArtifact)}`)
     }
   }
 }

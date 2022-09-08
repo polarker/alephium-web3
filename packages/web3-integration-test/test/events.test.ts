@@ -27,7 +27,7 @@ import { setCurrentNodeProvider } from '@alephium/web3'
 describe('events', function () {
   async function deployContract(signer: NodeWallet): Promise<[string, string]> {
     setCurrentNodeProvider('http://127.0.0.1:22973')
-    await Project.build()
+    await Project.build({ errorOnWarnings: false })
     const sub = Project.contract('sub/sub.ral')
     const subDeployTx = await sub.transactionForDeployment(signer, {
       initialFields: { result: 0 },
@@ -38,7 +38,7 @@ describe('events', function () {
     expect(subSubmitResult.txId).toEqual(subDeployTx.txId)
 
     // ignore unused private function warnings
-    const add = Project.contract('add/add.ral', { errorOnWarnings: false })
+    const add = Project.contract('add/add.ral')
     const addDeployTx = await add.transactionForDeployment(signer, {
       initialFields: { sub: subContractId, result: 0 },
       initialTokenAmounts: []
@@ -57,7 +57,7 @@ describe('events', function () {
 
   it('should subscribe contract events', async () => {
     setCurrentNodeProvider('http://127.0.0.1:22973')
-    await Project.build()
+    await Project.build({ errorOnWarnings: false })
     const signer = await testNodeWallet()
 
     const [contractAddress, contractId] = await deployContract(signer)
@@ -97,7 +97,7 @@ describe('events', function () {
 
   it('should cancel event subscription', async () => {
     setCurrentNodeProvider('http://127.0.0.1:22973')
-    await Project.build()
+    await Project.build({ errorOnWarnings: false })
     const signer = await testNodeWallet()
 
     const [contractAddress, contractId] = await deployContract(signer)
