@@ -75,20 +75,13 @@ Typings can automatically generated using the following command:
 npm run update-schemas
 ```
 
-### Packaging
-
-We need to include the `.gitignore` file inside the npm package so that it can be used by the `dist/cli/create-project.js` script. To do that we define the `prepack` and `postpack` npm scripts that will rename the `.gitignore` file to `gitignore`, pack it into the package, and rename it back to `.gitignore`. Similar approach has been followed by `create-react-app`<sup>[1]</sup>.
-
 ### Release
 
 To release a new version:
 
 1. Create a commit that updates the package version in package.json and package-lock.json and a tag with:
    ```shell
-   npm version patch # if you want to bump the patch version, without breaking changes
-   npm version minor # if you want to bump the minor version, with breaking changes
-   npm version prerelease --preid=rc # if you want to create a release candidate
-   npm version prerelease --preid=leman # if you want to create a leman prerelease
+   lerna version --no-private
    ```
 2. Push the tag to GitHub and trigger the publish workflow that will publish it on NPM with:
 
@@ -133,4 +126,3 @@ npm run test:watch
 [prettier-badge]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg
 [prettier-link]: https://github.com/prettier/prettier
 [release-notes]: https://github.com/alephium/alephium-web3/releases
-[1]: https://github.com/facebook/create-react-app/blob/2da5517689b7510ff8d8b0148ce372782cb285d7/packages/react-scripts/scripts/init.js#L264-L278
