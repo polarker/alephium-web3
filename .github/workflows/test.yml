@@ -42,6 +42,7 @@ jobs:
           echo "Alephium full node is up"
           sleep 5
       - run: pnpm install
+      - run: git status
       - run: npm run build
       - run: npm run lint
       - run: npm run test
