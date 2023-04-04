@@ -164,6 +164,7 @@ describe('WalletConnectProvider with single chainGroup', function () {
   })
 
   it('should forward requests', async () => {
+    delay(1000)
     await provider.nodeProvider!.infos.getInfosVersion()
   })
 
