@@ -19,9 +19,29 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7.19
+      - run: |
+          pushd docker
+          docker-compose up -d
+          popd
+          SECONDS=0
+          sleep 5
+          until curl http://localhost:22973/infos/self-clique
+          do
+            if (( SECONDS > 60 ))
+            then
+               echo "Alephium full node not working after 1 min..."
+               exit 1
+            fi
+            echo "Waiting..."
+            sleep 5
+          done
+          echo ""
+          echo "Alephium full node is up"
+          sleep 5
+      - run: pnpm install
       - run: npm run build
       - run: npm run lint
-      - run: npm run audit
-      - run: npm run start-devnet
       - run: npm run test
